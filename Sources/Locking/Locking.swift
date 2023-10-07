@@ -11,8 +11,8 @@ import Foundation
 #error("Locking doesn't support Swift versions below 5.5.")
 #endif
 
-/// Current Locking version. Necessary since SPM doesn't use dynamic libraries. Plus this will be more accurate.
-let version = "1.0.0"
+/// Current Locking version 0.0.1. Necessary since SPM doesn't use dynamic libraries. Plus this will be more accurate.
+let version = "0.0.1"
 
 public class Protected<T> {
     public init(_ data: T, using lock: NSLocking = NSLock()) {
