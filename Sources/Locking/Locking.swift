@@ -11,11 +11,13 @@ import Foundation
 #error("Locking doesn't support Swift versions below 5.5.")
 #endif
 
-/// Current Locking version 0.0.4. Necessary since SPM doesn't use dynamic libraries. Plus this will be more accurate.
-let version = "0.0.4"
+/// Current Locking version 0.0.5. Necessary since SPM doesn't use dynamic libraries. Plus this will be more accurate.
+let version = "0.0.5"
 
-public class Protected<T> {
-    public init(_ data: T, using lock: NSLocking = NSLock()) {
+public typealias SendableLocking = NSLocking & Sendable
+
+public final class Protected<T> {
+    public init(_ data: T, using lock: SendableLocking = NSLock()) {
         _data = data
         self.lock = lock
     }
@@ -50,9 +52,16 @@ public class Protected<T> {
         }
     }
 
+#if compiler(>=6)
+    private nonisolated(unsafe) var _data: T
+#else
     private var _data: T
-    private let lock: NSLocking
+#endif
+
+    private let lock: SendableLocking
 }
+
+extension Protected: Sendable {}
 
 public extension NSLocking {
     func sync<T>(_ block: () throws -> T) rethrows -> T {

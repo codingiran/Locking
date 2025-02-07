@@ -7,13 +7,25 @@
 
 import Foundation
 
-public enum AtomicLockError: Error {
+public enum AtomicLockError: LocalizedError {
     case isLocked
+    
+    public var errorDescription: String? {
+        switch self {
+        case .isLocked:
+            return "The atomic lock is locked."
+        }
+    }
 }
 
 public final class Atomic<T> {
     private var lock: pthread_mutex_t
-    private var value: T
+    
+    #if compiler(>=6)
+        private nonisolated(unsafe) var value: T
+    #else
+        private var value: T
+    #endif
     
     public init(value: T) {
         self.lock = pthread_mutex_t()
@@ -62,3 +74,7 @@ public final class Atomic<T> {
         return previous
     }
 }
+
+extension AtomicLockError: Sendable {}
+
+extension Atomic: @unchecked Sendable {}

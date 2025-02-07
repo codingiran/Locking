@@ -7,7 +7,7 @@
 
 import Foundation
 
-private protocol Lock {
+private protocol Lock: Sendable {
     func lock()
     func unlock()
 }
@@ -33,7 +33,7 @@ extension Lock {
 }
 
 /// An `os_unfair_lock` wrapper.
-private final class UnfairLock: Lock {
+private final class UnfairLock: Lock, @unchecked Sendable {
     private let unfairLock: os_unfair_lock_t
 
     init() {
@@ -60,7 +60,11 @@ private final class UnfairLock: Lock {
 @dynamicMemberLookup
 public final class Locked<T> {
     private let lock = UnfairLock()
-    private var value: T
+    #if compiler(>=6)
+        private nonisolated(unsafe) var value: T
+    #else
+        private var value: T
+    #endif
 
     init(_ value: T) {
         self.value = value
@@ -106,3 +110,5 @@ public final class Locked<T> {
         lock.around { value[keyPath: keyPath] }
     }
 }
+
+extension Locked: Sendable {}
